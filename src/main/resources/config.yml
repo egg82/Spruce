@@ -1,0 +1,39 @@
+# This is the backing data for everything
+# SQL is used as long-term storage
+# You may choose to use MySQL or SQLite
+# An SQL database of SOME description is required
+sql:
+  # The type of database to use. May be either MySQL or SQLite
+  type: 'sqlite'
+  # Number of connections to use. Cannot be lower than 1
+  # Recommended 2+ for parallel queries
+  threads: 2
+  # Table prefix, optional
+  # This will allow multiple Spruce installations to go to the same database without conflicting
+  prefix: ''
+  mysql:
+    address: '127.0.0.1'
+    port: 3306
+    user: ''
+    pass: ''
+    database: 'spruce'
+  sqlite:
+    file: 'spruce.db'
+
+# Specify what types of data to log
+log:
+  # Player chat/commands/logins/logouts/world changes
+  player: true
+  # Entity interactions/data
+  entities: true
+  # Block interactions/data
+  world: true
+  # WorldEdit/AsyncWorldEdit/FastAsyncWorldEdit/etc
+  worldedit: true
+
+# Logs/data beyond these values will be automatically removed from the database
+autoPurge:
+  # Player chat/commands/logins/logouts/world changes
+  player: 30days
+  # Entity/block/WorldEdit data
+  world: 7days

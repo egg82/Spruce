@@ -1,0 +1,19 @@
+name: Spruce
+main: me.egg82.sprc.Spruce
+version: 1.0.0
+author: egg82
+description: A logging/rollback system that actually works
+commands:
+  spruce:
+    aliases: [sprc, sp]
+    description: Spruce
+    permission: spruce.use
+    usage: |
+      /spruce reload: Reloads the plugin
+      /spruce help [page]: Privides a nice help menu
+      /spruce inspect: Toggle inspector
+      /spruce rollback <params>: Rollback block data
+      /spruce restore <params>: Restore block data
+      /spruce lookup <params>: Data lookup
+      /spruce purge <params>: Delete old data
+      /spruce undo: Revert the last command used
