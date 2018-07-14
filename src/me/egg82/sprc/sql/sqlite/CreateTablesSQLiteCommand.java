@@ -3,11 +3,10 @@ package me.egg82.sprc.sql.sqlite;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
-import ninja.egg82.bukkit.services.ConfigRegistry;
+import me.egg82.sprc.Config;
 import ninja.egg82.events.SQLEventArgs;
 import ninja.egg82.exceptionHandlers.IExceptionHandler;
 import ninja.egg82.patterns.ServiceLocator;
-import ninja.egg82.patterns.registries.IVariableRegistry;
 import ninja.egg82.patterns.Command;
 import ninja.egg82.sql.ISQL;
 
@@ -37,29 +36,61 @@ public class CreateTablesSQLiteCommand extends Command {
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
-		IVariableRegistry<String> configRegistry = ServiceLocator.getService(ConfigRegistry.class);
-		String prefix = configRegistry.getRegister("sql.prefix", String.class);
-		
-		playerChatQuery = sql.query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?;", "spruce_" + prefix + "player_chat");
-		playerDataQuery = sql.query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?;", "spruce_" + prefix + "player_data");
-		blockDataQuery = sql.query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?;", "spruce_" + prefix + "block_data");
-		entityDataQuery = sql.query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?;", "spruce_" + prefix + "entity_data");
+		playerChatQuery = sql.query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?;", "spruce_" + Config.prefix + "player_chat");
+		playerDataQuery = sql.query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?;", "spruce_" + Config.prefix + "player_data");
+		blockDataQuery = sql.query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?;", "spruce_" + Config.prefix + "block_data");
+		entityDataQuery = sql.query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?;", "spruce_" + Config.prefix + "entity_data");
 	}
 	
 	private void onSQLData(SQLEventArgs e) {
-		if (e.getUuid().equals(query)) {
+		if (e.getUuid().equals(playerChatQuery)) {
 			if (e.getData().data.length > 0 && e.getData().data[0].length > 0 && ((Number) e.getData().data[0][0]).intValue() != 0) {
-				sql.onError().detatch(sqlError);
-				sql.onData().detatch(sqlError);
+				return;
+			}
+			
+			sql.query(
+				"CREATE TABLE `spruce_" + Config.prefix + "player_chat` ("
+						+ "`uuid` TEXT(36) NOT NULL,"
+						+ "`chat` TEXT(65535) NOT NULL," // "Chat" - Encoded as a String with max length of 32767
+						+ "`time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+				+ ");"
+			);
+		} else if (e.getUuid().equals(playerDataQuery)) {
+			if (e.getData().data.length > 0 && e.getData().data[0].length > 0 && ((Number) e.getData().data[0][0]).intValue() != 0) {
+				return;
+			}
+			
+			sql.query(
+				"CREATE TABLE `spruce_" + Config.prefix + "player_data` ("
+						+ "`uuid` TEXT(36) NOT NULL,"
+						+ "`world` TEXT(55) NOT NULL,"
+						+ "`x` REAL NOT NULL,"
+						+ "`y` REAL NOT NULL,"
+						+ "`z` REAL NOT NULL,"
+						+ "`isLogin` INTEGER(1) NOT NULL,"
+						+ "`isLogout` INTEGER(1) NOT NULL,"
+						+ "`isWorldChange` INTEGER(1) NOT NULL,"
+						// Not storing player inv data. No reason to. Other plugins do that already and it's far too complex when considering use-cases will be affecting an area
+						+ "`time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+				+ ");"
+			);
+		} else if (e.getUuid().equals(blockDataQuery)) {
+			if (e.getData().data.length > 0 && e.getData().data[0].length > 0 && ((Number) e.getData().data[0][0]).intValue() != 0) {
 				return;
 			}
 			
 			finalQuery = sql.query(
-				"CREATE TABLE `antivpn` ("
-						+ "`ip` TEXT(45) NOT NULL,"
-						+ "`value` INTEGER(1) NOT NULL,"
-						+ "`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
-						+ "UNIQUE(`ip`)"
+				"CREATE TABLE `spruce_" + Config.prefix + "block_data` ("
+						+ "`actorUuid` TEXT(36) NOT NULL,"
+						+ "`type` TEXT(25) NOT NULL,"
+						+ "`blockData` INTEGER(1) NOT NULL,"
+						+ "`world` TEXT(55) NOT NULL,"
+						+ "`x` INTEGER NOT NULL,"
+						+ "`y` INTEGER NOT NULL,"
+						+ "`z` INTEGER NOT NULL,"
+						+ "`compressedData` BLOB,"
+						+ "`time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+						+ "`rolledBack` INTEGER(1) NOT NULL DEFAULT 0"
 				+ ");"
 			);
 		} else if (e.getUuid().equals(finalQuery)) {

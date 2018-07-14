@@ -1,9 +1,14 @@
 package me.egg82.sprc.sql.mysql;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
 import me.egg82.sprc.Config;
+import me.egg82.sprc.core.PlayerChatInsertContainer;
+import ninja.egg82.events.CompleteEventArgs;
 import ninja.egg82.events.SQLEventArgs;
 import ninja.egg82.exceptionHandlers.IExceptionHandler;
 import ninja.egg82.patterns.ServiceLocator;
@@ -16,18 +21,16 @@ public class InsertPlayerChatMySQLCommand extends Command {
 	
 	private UUID query = null;
 	
-	private UUID playerUuid = null;
-	private String chat = null;
+	private Collection<PlayerChatInsertContainer> data = null;
 	
 	private BiConsumer<Object, SQLEventArgs> sqlError = (s, e) -> onSQLError(e);
 	private BiConsumer<Object, SQLEventArgs> sqlData = (s, e) -> onSQLData(e);
 	
 	//constructor
-	public InsertPlayerChatMySQLCommand(UUID playerUuid, String chat) {
+	public InsertPlayerChatMySQLCommand(Collection<PlayerChatInsertContainer> data) {
 		super();
 		
-		this.playerUuid = playerUuid;
-		this.chat = chat;
+		this.data = data;
 		
 		sql.onError().attach(sqlError);
 		sql.onData().attach(sqlData);
@@ -37,12 +40,14 @@ public class InsertPlayerChatMySQLCommand extends Command {
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
-		query = sql.query("INSERT INTO `spruce_ " + Config.prefix + "player_chat` (`uuid`, `chat`) VALUES(?, ?);", playerUuid.toString(), chat);
+		query = sql.query("INSERT INTO `spruce_" + Config.prefix + "player_chat` (`uuid`, `chat`) VALUES " + getValues() + ";", getData());
 	}
 	private void onSQLData(SQLEventArgs e) {
 		if (e.getUuid().equals(query)) {
 			sql.onError().detatch(sqlError);
 			sql.onData().detatch(sqlError);
+			
+			onComplete().invoke(this, CompleteEventArgs.EMPTY);
 		}
 	}
 	private void onSQLError(SQLEventArgs e) {
@@ -57,6 +62,29 @@ public class InsertPlayerChatMySQLCommand extends Command {
 		sql.onError().detatch(sqlError);
 		sql.onData().detatch(sqlError);
 		
+		onComplete().invoke(this, CompleteEventArgs.EMPTY);
+		
 		throw new RuntimeException(e.getSQLError().ex);
+	}
+	
+	private String getValues() {
+		String retVal = "";
+		
+		for (int i = 0; i < data.size(); i++) {
+			retVal += "(?, ?), ";
+		}
+		retVal = retVal.substring(0, retVal.length() - 2);
+		
+		return retVal;
+	}
+	private Object[] getData() {
+		List<Object> retVal = new ArrayList<Object>();
+		
+		for (PlayerChatInsertContainer d : data) {
+			retVal.add(d.getPlayerUuid().toString());
+			retVal.add(d.getChat());
+		}
+		
+		return retVal.toArray();
 	}
 }

@@ -22,14 +22,36 @@ sql:
 
 # Specify what types of data to log
 log:
-  # Player chat/commands/logins/logouts/world changes
-  player: true
+  player:
+    chat: true
+    command: true
+    login: true
+    logout: true
+    worldChange: true
   # Entity interactions/data
   entities: true
-  # Block interactions/data
-  world: true
-  # WorldEdit/AsyncWorldEdit/FastAsyncWorldEdit/etc
-  worldedit: true
+  block:
+    # Low frequency/intensity
+    break: true
+    place: true
+    explode: true
+    fromTo: true
+    # Recommended bare-minimum
+    grow: true
+    ignite: true
+    burn: true
+    inventory: true
+    entity: true
+    # High frequency/intensity
+    damage: false
+    dispense: false
+    fadeForm: false
+    piston: false
+    spread: false
+    cauldron: false
+    decay: false
+    # Plugins
+    worldedit: true
 
 # Logs/data beyond these values will be automatically removed from the database
 autoPurge:

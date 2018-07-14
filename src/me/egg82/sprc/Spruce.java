@@ -1,5 +1,6 @@
 package me.egg82.sprc;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.BiConsumer;
@@ -7,11 +8,24 @@ import java.util.logging.Level;
 
 import org.bukkit.ChatColor;
 
+import me.egg82.sprc.buffers.BlockDataBuffer;
+import me.egg82.sprc.buffers.PlayerChatBuffer;
+import me.egg82.sprc.buffers.PlayerDataBuffer;
+import me.egg82.sprc.core.BlockDataInsertContainer;
+import me.egg82.sprc.core.PlayerChatInsertContainer;
+import me.egg82.sprc.core.PlayerDataInsertContainer;
+import me.egg82.sprc.sql.mysql.InsertBlockDataMySQLCommand;
+import me.egg82.sprc.sql.mysql.InsertPlayerChatMySQLCommand;
+import me.egg82.sprc.sql.mysql.InsertPlayerDataMySQLCommand;
+import me.egg82.sprc.sql.mysql.PurgeDataMySQLCommand;
+import me.egg82.sprc.sql.sqlite.InsertBlockDataSQLiteCommand;
+import me.egg82.sprc.sql.sqlite.InsertPlayerChatSQLiteCommand;
+import me.egg82.sprc.sql.sqlite.InsertPlayerDataSQLiteCommand;
+import me.egg82.sprc.sql.sqlite.PurgeDataSQLiteCommand;
 import ninja.egg82.bukkit.BasePlugin;
 import ninja.egg82.bukkit.processors.CommandProcessor;
 import ninja.egg82.bukkit.processors.EventProcessor;
 import ninja.egg82.bukkit.services.ConfigRegistry;
-import ninja.egg82.bukkit.utils.VersionUtil;
 import ninja.egg82.bukkit.utils.YamlUtil;
 import ninja.egg82.enums.BaseSQLType;
 import ninja.egg82.events.CompleteEventArgs;
@@ -20,12 +34,14 @@ import ninja.egg82.exceptionHandlers.IExceptionHandler;
 import ninja.egg82.exceptionHandlers.RollbarExceptionHandler;
 import ninja.egg82.exceptionHandlers.builders.GameAnalyticsBuilder;
 import ninja.egg82.exceptionHandlers.builders.RollbarBuilder;
+import ninja.egg82.patterns.DoubleBuffer;
 import ninja.egg82.patterns.ServiceLocator;
 import ninja.egg82.plugin.messaging.IMessageHandler;
 import ninja.egg82.plugin.utils.PluginReflectUtil;
 import ninja.egg82.sql.ISQL;
 import ninja.egg82.utils.FileUtil;
 import ninja.egg82.utils.ThreadUtil;
+import ninja.egg82.utils.TimeUtil;
 
 public class Spruce extends BasePlugin {
 	//vars
@@ -58,9 +74,12 @@ public class Spruce extends BasePlugin {
 		
 		PluginReflectUtil.addServicesFromPackage("me.egg82.sprc.registries", true);
 		PluginReflectUtil.addServicesFromPackage("me.egg82.sprc.lists", true);
+		PluginReflectUtil.addServicesFromPackage("me.egg82.sprc.buffers", true);
 		
 		ServiceLocator.getService(ConfigRegistry.class).load(YamlUtil.getOrLoadDefaults(getDataFolder().getAbsolutePath() + FileUtil.DIRECTORY_SEPARATOR_CHAR + "config.yml", "config.yml", true));
 		Config.prefix = ServiceLocator.getService(ConfigRegistry.class).getRegister("sql.prefix", String.class);
+		Config.purgePlayer = TimeUtil.getTime(ServiceLocator.getService(ConfigRegistry.class).getRegister("autoPurge.player", String.class));
+		Config.purgeWorld = TimeUtil.getTime(ServiceLocator.getService(ConfigRegistry.class).getRegister("autoPurge.world", String.class));
 	}
 	
 	public void onEnable() {
@@ -85,12 +104,15 @@ public class Spruce extends BasePlugin {
 		
 		ThreadUtil.rename(getName());
 		ThreadUtil.schedule(checkExceptionLimitReached, 60L * 60L * 1000L);
+		ThreadUtil.schedule(onFlushDataThread, 3L * 1000L); // The longer we wait, the more "off" actual insert times become
 		ThreadUtil.schedule(onPurgeDataThread, 60L * 1000L);
 	}
 	public void onDisable() {
 		super.onDisable();
 		
 		ThreadUtil.shutdown(1000L);
+		
+		onFlushDataThread.run();
 		
 		List<ISQL> sqls = ServiceLocator.removeServices(ISQL.class);
 		for (ISQL sql : sqls) {
@@ -141,6 +163,15 @@ public class Spruce extends BasePlugin {
 			ThreadUtil.schedule(onPurgeDataThread, 60L * 1000L);
 		}
 	};
+	private Runnable onFlushDataThread = new Runnable() {
+		public void run() {
+			flushPlayerChat();
+			flushPlayerData();
+			flushBlockData();
+			
+			ThreadUtil.schedule(onFlushDataThread, 3L * 1000L);
+		}
+	};
 	private Runnable checkExceptionLimitReached = new Runnable() {
 		public void run() {
 			if (exceptionHandler.isLimitReached()) {
@@ -166,5 +197,135 @@ public class Spruce extends BasePlugin {
 	}
 	private void disableMessage() {
 		printInfo(ChatColor.GREEN + "--== " + ChatColor.LIGHT_PURPLE + "Spruce Disabled" + ChatColor.GREEN + " ==--");
+	}
+	
+	private void flushPlayerChat() {
+		CountDownLatch latch = new CountDownLatch(1);
+		
+		BiConsumer<Object, CompleteEventArgs<?>> complete = (s, e) -> {
+			ISQL sql = ServiceLocator.getService(ISQL.class);
+			if (sql.getType() == BaseSQLType.MySQL) {
+				InsertPlayerChatMySQLCommand c = (InsertPlayerChatMySQLCommand) s;
+				c.onComplete().detatchAll();
+			} else if (sql.getType() == BaseSQLType.SQLite) {
+				InsertPlayerChatSQLiteCommand c = (InsertPlayerChatSQLiteCommand) s;
+				c.onComplete().detatchAll();
+			}
+			
+			latch.countDown();
+		};
+		
+		DoubleBuffer<PlayerChatInsertContainer> buffer = ServiceLocator.getService(PlayerChatBuffer.class);
+		buffer.swapBuffers();
+		
+		if (buffer.getBackBuffer().size() == 0) {
+			return;
+		}
+		
+		List<PlayerChatInsertContainer> data = new ArrayList<PlayerChatInsertContainer>(buffer.getBackBuffer());
+		buffer.getBackBuffer().clear();
+		
+		ISQL sql = ServiceLocator.getService(ISQL.class);
+		if (sql.getType() == BaseSQLType.MySQL) {
+			InsertPlayerChatMySQLCommand command = new InsertPlayerChatMySQLCommand(data);
+			command.onComplete().attach(complete);
+			command.start();
+		} else if (sql.getType() == BaseSQLType.SQLite) {
+			InsertPlayerChatSQLiteCommand command = new InsertPlayerChatSQLiteCommand(data);
+			command.onComplete().attach(complete);
+			command.start();
+		}
+		
+		try {
+			latch.await();
+		} catch (Exception ex) {
+			ServiceLocator.getService(IExceptionHandler.class).silentException(ex);
+		}
+	}
+	private void flushPlayerData() {
+		CountDownLatch latch = new CountDownLatch(1);
+		
+		BiConsumer<Object, CompleteEventArgs<?>> complete = (s, e) -> {
+			ISQL sql = ServiceLocator.getService(ISQL.class);
+			if (sql.getType() == BaseSQLType.MySQL) {
+				InsertPlayerDataMySQLCommand c = (InsertPlayerDataMySQLCommand) s;
+				c.onComplete().detatchAll();
+			} else if (sql.getType() == BaseSQLType.SQLite) {
+				InsertPlayerDataSQLiteCommand c = (InsertPlayerDataSQLiteCommand) s;
+				c.onComplete().detatchAll();
+			}
+			
+			latch.countDown();
+		};
+		
+		DoubleBuffer<PlayerDataInsertContainer> buffer = ServiceLocator.getService(PlayerDataBuffer.class);
+		buffer.swapBuffers();
+		
+		if (buffer.getBackBuffer().size() == 0) {
+			return;
+		}
+		
+		List<PlayerDataInsertContainer> data = new ArrayList<PlayerDataInsertContainer>(buffer.getBackBuffer());
+		buffer.getBackBuffer().clear();
+		
+		ISQL sql = ServiceLocator.getService(ISQL.class);
+		if (sql.getType() == BaseSQLType.MySQL) {
+			InsertPlayerDataMySQLCommand command = new InsertPlayerDataMySQLCommand(data);
+			command.onComplete().attach(complete);
+			command.start();
+		} else if (sql.getType() == BaseSQLType.SQLite) {
+			InsertPlayerDataSQLiteCommand command = new InsertPlayerDataSQLiteCommand(data);
+			command.onComplete().attach(complete);
+			command.start();
+		}
+		
+		try {
+			latch.await();
+		} catch (Exception ex) {
+			ServiceLocator.getService(IExceptionHandler.class).silentException(ex);
+		}
+	}
+	private void flushBlockData() {
+		CountDownLatch latch = new CountDownLatch(1);
+		
+		BiConsumer<Object, CompleteEventArgs<?>> complete = (s, e) -> {
+			ISQL sql = ServiceLocator.getService(ISQL.class);
+			if (sql.getType() == BaseSQLType.MySQL) {
+				InsertBlockDataMySQLCommand c = (InsertBlockDataMySQLCommand) s;
+				c.onComplete().detatchAll();
+			} else if (sql.getType() == BaseSQLType.SQLite) {
+				InsertBlockDataSQLiteCommand c = (InsertBlockDataSQLiteCommand) s;
+				c.onComplete().detatchAll();
+			}
+			
+			latch.countDown();
+		};
+		
+		DoubleBuffer<BlockDataInsertContainer> buffer = ServiceLocator.getService(BlockDataBuffer.class);
+		buffer.swapBuffers();
+		
+		if (buffer.getBackBuffer().size() == 0) {
+			return;
+		}
+		
+		List<BlockDataInsertContainer> data = new ArrayList<BlockDataInsertContainer>(buffer.getBackBuffer());
+		buffer.getBackBuffer().clear();
+		
+		ISQL sql = ServiceLocator.getService(ISQL.class);
+		if (sql.getType() == BaseSQLType.MySQL) {
+			InsertBlockDataMySQLCommand command = new InsertBlockDataMySQLCommand(data);
+			command.onComplete().attach(complete);
+			command.start();
+		} else if (sql.getType() == BaseSQLType.SQLite) {
+			InsertBlockDataSQLiteCommand command = new InsertBlockDataSQLiteCommand(data);
+			command.onComplete().attach(complete);
+			command.start();
+		}
+		
+		try {
+			latch.await();
+		} catch (Exception ex) {
+			ServiceLocator.getService(IExceptionHandler.class).silentException(ex);
+		}
 	}
 }

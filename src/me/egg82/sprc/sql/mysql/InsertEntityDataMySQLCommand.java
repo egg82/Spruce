@@ -8,6 +8,7 @@ import org.bukkit.entity.EntityType;
 
 import me.egg82.sprc.Config;
 import me.egg82.sprc.enums.EntityDataType;
+import ninja.egg82.events.CompleteEventArgs;
 import ninja.egg82.events.SQLEventArgs;
 import ninja.egg82.exceptionHandlers.IExceptionHandler;
 import ninja.egg82.patterns.ServiceLocator;
@@ -68,12 +69,14 @@ public class InsertEntityDataMySQLCommand extends Command {
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
-		query = sql.query("INSERT INTO `spruce_ " + Config.prefix + "player_data` (`uuid`, `actorUuid`, `type`, `world`, `x`, `y`, `z`, `isSpawn`, `isDeath`, `isWorldChange`, `inventory`) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", entityUuid.toString(), actorUuid.toString(), type, world, x, y, z, isSpawn, isDeath, isWorldChange, inventory);
+		query = sql.query("INSERT INTO `spruce_ " + Config.prefix + "player_data` (`uuid`, `actorUuid`, `type`, `world`, `x`, `y`, `z`, `isSpawn`, `isDeath`, `isWorldChange`, `inventory`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", entityUuid.toString(), actorUuid.toString(), type, world, x, y, z, isSpawn, isDeath, isWorldChange, inventory);
 	}
 	private void onSQLData(SQLEventArgs e) {
 		if (e.getUuid().equals(query)) {
 			sql.onError().detatch(sqlError);
 			sql.onData().detatch(sqlError);
+			
+			onComplete().invoke(this, CompleteEventArgs.EMPTY);
 		}
 	}
 	private void onSQLError(SQLEventArgs e) {
@@ -87,6 +90,8 @@ public class InsertEntityDataMySQLCommand extends Command {
 		
 		sql.onError().detatch(sqlError);
 		sql.onData().detatch(sqlError);
+		
+		onComplete().invoke(this, CompleteEventArgs.EMPTY);
 		
 		throw new RuntimeException(e.getSQLError().ex);
 	}

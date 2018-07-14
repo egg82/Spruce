@@ -1,4 +1,4 @@
-package me.egg82.sprc.sql.mysql;
+package me.egg82.sprc.sql.sqlite;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,7 +16,7 @@ import ninja.egg82.patterns.ServiceLocator;
 import ninja.egg82.patterns.Command;
 import ninja.egg82.sql.ISQL;
 
-public class InsertPlayerDataMySQLCommand extends Command {
+public class InsertPlayerDataSQLiteCommand extends Command {
 	//vars
 	private ISQL sql = ServiceLocator.getService(ISQL.class);
 	
@@ -28,7 +28,7 @@ public class InsertPlayerDataMySQLCommand extends Command {
 	private BiConsumer<Object, SQLEventArgs> sqlData = (s, e) -> onSQLData(e);
 	
 	//constructor
-	public InsertPlayerDataMySQLCommand(Collection<PlayerDataInsertContainer> data) {
+	public InsertPlayerDataSQLiteCommand(Collection<PlayerDataInsertContainer> data) {
 		super();
 		
 		this.data = data;
@@ -41,7 +41,7 @@ public class InsertPlayerDataMySQLCommand extends Command {
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
-		query = sql.query("INSERT INTO `spruce_ " + Config.prefix + "player_data` (`uuid`, `world`, `x`, `y`, `z`, `isLogin`, `isLogout`, `isWorldChange`) VALUES " + getValues() + ";", getData());
+		query = sql.query("INSERT INTO `spruce_" + Config.prefix + "player_data` (`uuid`, `world`, `x`, `y`, `z`, `isLogin`, `isLogout`, `isWorldChange`) VALUES " + getValues() + ";", getData());
 	}
 	private void onSQLData(SQLEventArgs e) {
 		if (e.getUuid().equals(query)) {

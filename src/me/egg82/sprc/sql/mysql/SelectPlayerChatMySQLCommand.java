@@ -1,11 +1,14 @@
-package me.egg82.sprc.sql.sqlite;
+package me.egg82.sprc.sql.mysql;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
-import me.egg82.avpn.Config;
-import me.egg82.avpn.core.ResultEventArgs;
+import me.egg82.sprc.Config;
+import me.egg82.sprc.core.PlayerChatSelectContainer;
+import me.egg82.sprc.core.PlayerChatResultEventArgs;
 import ninja.egg82.events.SQLEventArgs;
 import ninja.egg82.exceptionHandlers.IExceptionHandler;
 import ninja.egg82.patterns.ServiceLocator;
@@ -13,53 +16,55 @@ import ninja.egg82.patterns.events.EventHandler;
 import ninja.egg82.patterns.Command;
 import ninja.egg82.sql.ISQL;
 
-public class SelectResultSQLiteCommand extends Command {
+public class SelectPlayerChatMySQLCommand extends Command {
 	//vars
 	private ISQL sql = ServiceLocator.getService(ISQL.class);
 	
 	private UUID query = null;
 	
-	private String ip = null;
+	private UUID playerUuid = null;
+	private Long time = null;
 	
 	private BiConsumer<Object, SQLEventArgs> sqlError = (s, e) -> onSQLError(e);
 	private BiConsumer<Object, SQLEventArgs> sqlData = (s, e) -> onSQLData(e);
 	
-	private EventHandler<ResultEventArgs> onData = new EventHandler<ResultEventArgs>();
+	private EventHandler<PlayerChatResultEventArgs> onData = new EventHandler<PlayerChatResultEventArgs>();
 	
 	//constructor
-	public SelectResultSQLiteCommand(String ip) {
+	public SelectPlayerChatMySQLCommand(UUID playerUuid, long time) {
 		super();
 		
-		this.ip = ip;
+		this.playerUuid = playerUuid;
+		this.time = Long.valueOf(time);
 		
 		sql.onError().attach(sqlError);
 		sql.onData().attach(sqlData);
 	}
 	
 	//public
-	public EventHandler<ResultEventArgs> onData() {
+	public EventHandler<PlayerChatResultEventArgs> onData() {
 		return onData;
 	}
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
-		query = sql.parallelQuery("SELECT `value`, `created` FROM `antivpn` WHERE `ip`=? AND CURRENT_TIMESTAMP > DATETIME(`created`, ?);", ip, "+" + Math.floorDiv(Config.sourceCacheTime, 1000L) + " seconds");
+		query = sql.parallelQuery("SELECT `chat`, `time` FROM `spruce_" + Config.prefix + "player_chat` WHERE `uuid`=? AND CURRENT_TIMESTAMP() <= `time` + INTERVAL ? * 0.001 SECOND;", playerUuid.toString(), time);
 	}
 	
 	private void onSQLData(SQLEventArgs e) {
 		if (e.getUuid().equals(query)) {
 			Exception lastEx = null;
 			
-			ResultEventArgs retVal = null;
+			List<PlayerChatSelectContainer> retVal = new ArrayList<PlayerChatSelectContainer>();
 			// Iterate rows
 			for (Object[] o : e.getData().data) {
 				try {
 					// Grab all data and convert to more useful object types
-					Boolean value = (((Number) o[0]).intValue() == 0) ? Boolean.FALSE : Boolean.TRUE;
-					long created = Timestamp.valueOf((String) o[1]).getTime();
+					String chat = (String) o[0];
+					long time = ((Timestamp) o[1]).getTime();
 					
 					// Add new data
-					retVal = new ResultEventArgs(ip, value, created);
+					retVal.add(new PlayerChatSelectContainer(chat, time));
 				} catch (Exception ex) {
 					ServiceLocator.getService(IExceptionHandler.class).silentException(ex);
 					ex.printStackTrace();
@@ -70,7 +75,7 @@ public class SelectResultSQLiteCommand extends Command {
 			sql.onError().detatch(sqlError);
 			sql.onData().detatch(sqlError);
 			
-			onData.invoke(this, retVal);
+			onData.invoke(this, new PlayerChatResultEventArgs(playerUuid, retVal));
 			
 			if (lastEx != null) {
 				throw new RuntimeException(lastEx);
@@ -89,7 +94,7 @@ public class SelectResultSQLiteCommand extends Command {
 		sql.onError().detatch(sqlError);
 		sql.onData().detatch(sqlError);
 		
-		onData.invoke(this, null);
+		onData.invoke(this, PlayerChatResultEventArgs.EMPTY);
 		
 		throw new RuntimeException(e.getSQLError().ex);
 	}

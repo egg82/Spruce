@@ -1,10 +1,17 @@
 package me.egg82.sprc.sql.mysql;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
+import org.bukkit.Location;
+
 import me.egg82.sprc.Config;
-import ninja.egg82.bukkit.core.BlockData;
+import me.egg82.sprc.core.BlockDataInsertContainer;
+import ninja.egg82.bukkit.reflection.block.serialization.ISerializationHelper;
+import ninja.egg82.events.CompleteEventArgs;
 import ninja.egg82.events.SQLEventArgs;
 import ninja.egg82.exceptionHandlers.IExceptionHandler;
 import ninja.egg82.patterns.ServiceLocator;
@@ -17,33 +24,18 @@ public class InsertBlockDataMySQLCommand extends Command {
 	
 	private UUID query = null;
 	
-	private UUID actorUuid = null;
-	private String type = null;
-	private Byte blockData = null;
-	private String world = null;
-	private Integer x = null;
-	private Integer y = null;
-	private Integer z = null;
-	private byte[] compressedData = null;
+	private Collection<BlockDataInsertContainer> data = null;
 	
 	private BiConsumer<Object, SQLEventArgs> sqlError = (s, e) -> onSQLError(e);
 	private BiConsumer<Object, SQLEventArgs> sqlData = (s, e) -> onSQLData(e);
 	
+	private ISerializationHelper serializationHelper = ServiceLocator.getService(ISerializationHelper.class);
+	
 	//constructor
-	public InsertBlockDataMySQLCommand(BlockData oldData) {
-		this(new UUID(0L, 0L), oldData);
-	}
-	public InsertBlockDataMySQLCommand(UUID actorUuid, BlockData oldData) {
+	public InsertBlockDataMySQLCommand(Collection<BlockDataInsertContainer> data) {
 		super();
 		
-		this.actorUuid = actorUuid;
-		this.type = oldData.getType().name();
-		this.blockData = Byte.valueOf(oldData.getBlockData());
-		this.world = oldData.getLocation().getWorld().getName();
-		this.x = Integer.valueOf(oldData.getLocation().getBlockX());
-		this.y = Integer.valueOf(oldData.getLocation().getBlockY());
-		this.z = Integer.valueOf(oldData.getLocation().getBlockZ());
-		this.compressedData = oldData.getCompressedData();
+		this.data = data;
 		
 		sql.onError().attach(sqlError);
 		sql.onData().attach(sqlData);
@@ -53,12 +45,14 @@ public class InsertBlockDataMySQLCommand extends Command {
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
-		query = sql.query("INSERT INTO `spruce_ " + Config.prefix + "block_data` (`actorUuid`, `type`, `blockData`, `world`, `x`, `y`, `z`, `compressedData`) VALUES(?, ?, ?, ?, ?, ?, ?, ?);", actorUuid.toString(), type, blockData, world, x, y, z, compressedData);
+		query = sql.query("INSERT INTO `spruce_" + Config.prefix + "block_data` (`actorUuid`, `type`, `blockData`, `world`, `x`, `y`, `z`, `compressedData`) VALUES " + getValues() + ";", getData());
 	}
 	private void onSQLData(SQLEventArgs e) {
 		if (e.getUuid().equals(query)) {
 			sql.onError().detatch(sqlError);
 			sql.onData().detatch(sqlError);
+			
+			onComplete().invoke(this, CompleteEventArgs.EMPTY);
 		}
 	}
 	private void onSQLError(SQLEventArgs e) {
@@ -73,6 +67,37 @@ public class InsertBlockDataMySQLCommand extends Command {
 		sql.onError().detatch(sqlError);
 		sql.onData().detatch(sqlError);
 		
+		onComplete().invoke(this, CompleteEventArgs.EMPTY);
+		
 		throw new RuntimeException(e.getSQLError().ex);
+	}
+	
+	private String getValues() {
+		String retVal = "";
+		
+		for (int i = 0; i < data.size(); i++) {
+			retVal += "(?, ?, ?, ?, ?, ?, ?, ?), ";
+		}
+		retVal = retVal.substring(0, retVal.length() - 2);
+		
+		return retVal;
+	}
+	@SuppressWarnings("deprecation")
+	private Object[] getData() {
+		List<Object> retVal = new ArrayList<Object>();
+		
+		for (BlockDataInsertContainer d : data) {
+			Location location = d.getBlockState().getLocation();
+			retVal.add(d.getActorUuid().toString());
+			retVal.add(d.getBlockState().getType().name());
+			retVal.add(Byte.valueOf(d.getBlockState().getRawData()));
+			retVal.add(location.getWorld().getName());
+			retVal.add(Integer.valueOf(location.getBlockX()));
+			retVal.add(Integer.valueOf(location.getBlockY()));
+			retVal.add(Integer.valueOf(location.getBlockZ()));
+			retVal.add(serializationHelper.toCompressedBytes(d.getBlockState()));
+		}
+		
+		return retVal.toArray();
 	}
 }
