@@ -3,6 +3,7 @@ package me.egg82.sprc.sql.mysql;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
+import me.egg82.sprc.Config;
 import ninja.egg82.bukkit.services.ConfigRegistry;
 import ninja.egg82.events.SQLEventArgs;
 import ninja.egg82.exceptionHandlers.IExceptionHandler;
@@ -39,24 +40,20 @@ public class CreateTablesMySQLCommand extends Command {
 	protected void onExecute(long elapsedMilliseconds) {
 		IVariableRegistry<String> configRegistry = ServiceLocator.getService(ConfigRegistry.class);
 		String database = configRegistry.getRegister("sql.mysql.database", String.class);
-		String prefix = configRegistry.getRegister("sql.prefix", String.class);
 		
-		playerChatQuery = sql.query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=? AND table_name=?;", database, "spruce_" + prefix + "player_chat");
-		playerDataQuery = sql.query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=? AND table_name=?;", database, "spruce_" + prefix + "player_data");
-		blockDataQuery = sql.query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=? AND table_name=?;", database, "spruce_" + prefix + "block_data");
-		entityDataQuery = sql.query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=? AND table_name=?;", database, "spruce_" + prefix + "entity_data");
+		playerChatQuery = sql.query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=? AND table_name=?;", database, "spruce_" + Config.prefix + "player_chat");
+		playerDataQuery = sql.query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=? AND table_name=?;", database, "spruce_" + Config.prefix + "player_data");
+		blockDataQuery = sql.query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=? AND table_name=?;", database, "spruce_" + Config.prefix + "block_data");
+		entityDataQuery = sql.query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=? AND table_name=?;", database, "spruce_" + Config.prefix + "entity_data");
 	}
 	private void onSQLData(SQLEventArgs e) {
-		IVariableRegistry<String> configRegistry = ServiceLocator.getService(ConfigRegistry.class);
-		String prefix = configRegistry.getRegister("sql.prefix", String.class);
-		
 		if (e.getUuid().equals(playerChatQuery)) {
 			if (e.getData().data.length > 0 && e.getData().data[0].length > 0 && ((Number) e.getData().data[0][0]).intValue() != 0) {
 				return;
 			}
 			
 			sql.query(
-				"CREATE TABLE `" + "spruce_" + prefix + "player_chat" + "` (" // Can't use prepared statements with things like "CREATE TABLE"
+				"CREATE TABLE `" + "spruce_" + Config.prefix + "player_chat" + "` (" // Can't use prepared statements with things like "CREATE TABLE"
 						+ "`id` BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,"
 						+ "`uuid` VARCHAR(36) NOT NULL,"
 						+ "`chat` TEXT NOT NULL," // "Chat" - Encoded as a String with max length of 32767. This will make lookups slower, which sucks, but oh well
@@ -69,7 +66,7 @@ public class CreateTablesMySQLCommand extends Command {
 			}
 			
 			sql.query(
-				"CREATE TABLE `" + "spruce_" + prefix + "player_data" + "` (" // Can't use prepared statements with things like "CREATE TABLE"
+				"CREATE TABLE `" + "spruce_" + Config.prefix + "player_data" + "` (" // Can't use prepared statements with things like "CREATE TABLE"
 						+ "`id` BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,"
 						+ "`uuid` VARCHAR(36) NOT NULL,"
 						+ "`world` VARCHAR(55) NOT NULL,"
@@ -89,14 +86,16 @@ public class CreateTablesMySQLCommand extends Command {
 			}
 			
 			sql.query(
-				"CREATE TABLE `" + "spruce_" + prefix + "block_data" + "` (" // Can't use prepared statements with things like "CREATE TABLE"
+				"CREATE TABLE `" + "spruce_" + Config.prefix + "block_data" + "` (" // Can't use prepared statements with things like "CREATE TABLE"
 						+ "`id` BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,"
 						+ "`actorUuid` VARCHAR(36) NOT NULL," // UUID of acting player, or zeroes if system/Bukkit/plugin
+						+ "`type` VARCHAR(25) NOT NULL,"
+						+ "`blockData` TINYINT(1) NOT NULL,"
 						+ "`world` VARCHAR(55) NOT NULL,"
 						+ "`x` INTEGER NOT NULL,"
 						+ "`y` INTEGER NOT NULL,"
 						+ "`z` INTEGER NOT NULL,"
-						+ "`inventory` BLOB," // Not MEDIUMBLOB or LONGBLOB because 64k of data should be more than enough, especially compressed
+						+ "`compressedData` BLOB," // Not MEDIUMBLOB or LONGBLOB because 64k of data should be more than enough, especially compressed
 						+ "`time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
 						+ "`rolledBack` BOOLEAN NOT NULL DEFAULT 0"
 				+ ");"
@@ -109,7 +108,7 @@ public class CreateTablesMySQLCommand extends Command {
 			}
 			
 			finalQuery = sql.query(
-				"CREATE TABLE `" + "spruce_" + prefix + "entity_data" + "` (" // Can't use prepared statements with things like "CREATE TABLE"
+				"CREATE TABLE `" + "spruce_" + Config.prefix + "entity_data" + "` (" // Can't use prepared statements with things like "CREATE TABLE"
 						+ "`id` BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,"
 						+ "`uuid` VARCHAR(36) NOT NULL," // Entity UUID, in case it never actually despawned
 						+ "`actorUuid` VARCHAR(36) NOT NULL," // UUID of acting player, or zeroes if system/Bukkit/plugin

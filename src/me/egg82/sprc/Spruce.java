@@ -59,9 +59,8 @@ public class Spruce extends BasePlugin {
 		PluginReflectUtil.addServicesFromPackage("me.egg82.sprc.registries", true);
 		PluginReflectUtil.addServicesFromPackage("me.egg82.sprc.lists", true);
 		
-		reflect(getGameVersion(), "me.egg82.sprc.reflection.serialization");
-		
 		ServiceLocator.getService(ConfigRegistry.class).load(YamlUtil.getOrLoadDefaults(getDataFolder().getAbsolutePath() + FileUtil.DIRECTORY_SEPARATOR_CHAR + "config.yml", "config.yml", true));
+		Config.prefix = ServiceLocator.getService(ConfigRegistry.class).getRegister("sql.prefix", String.class);
 	}
 	
 	public void onEnable() {
@@ -167,16 +166,5 @@ public class Spruce extends BasePlugin {
 	}
 	private void disableMessage() {
 		printInfo(ChatColor.GREEN + "--== " + ChatColor.LIGHT_PURPLE + "Spruce Disabled" + ChatColor.GREEN + " ==--");
-	}
-	
-	private void reflect(String version, String pkg) {
-		reflect(version, pkg, true);
-	}
-	private void reflect(String version, String pkg, boolean lazyInitialize) {
-		Class<Object> bestMatch = VersionUtil.getBestMatch(Object.class, version, pkg, false);
-		
-		if (bestMatch != null) {
-			ServiceLocator.provideService(bestMatch, lazyInitialize);
-		}
 	}
 }
