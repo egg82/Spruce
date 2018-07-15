@@ -1,6 +1,6 @@
-package me.egg82.sprc.events;
+package me.egg82.sprc.events.block;
 
-import org.bukkit.event.block.BlockFormEvent;
+import org.bukkit.event.block.BlockDamageEvent;
 
 import me.egg82.sprc.Config;
 import me.egg82.sprc.buffers.BlockDataBuffer;
@@ -10,12 +10,12 @@ import ninja.egg82.patterns.ServiceLocator;
 import ninja.egg82.plugin.handlers.events.MonitorEventHandler;
 import ninja.egg82.utils.ThreadUtil;
 
-public class LogBlockFormEvent extends MonitorEventHandler<BlockFormEvent> {
+public class LogBlockDamageEvent extends MonitorEventHandler<BlockDamageEvent> {
 	//vars
 	private DoubleBuffer<BlockDataInsertContainer> buffer = ServiceLocator.getService(BlockDataBuffer.class);
 	
 	//constructor
-	public LogBlockFormEvent() {
+	public LogBlockDamageEvent() {
 		super();
 	}
 	
@@ -23,7 +23,7 @@ public class LogBlockFormEvent extends MonitorEventHandler<BlockFormEvent> {
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
-		if (!Config.blockConfig.form) {
+		if (!Config.blockConfig.damage) {
 			return;
 		}
 		

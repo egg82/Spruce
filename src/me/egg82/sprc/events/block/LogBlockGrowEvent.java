@@ -1,6 +1,6 @@
-package me.egg82.sprc.events;
+package me.egg82.sprc.events.block;
 
-import org.bukkit.event.block.BlockSpreadEvent;
+import org.bukkit.event.block.BlockGrowEvent;
 
 import me.egg82.sprc.Config;
 import me.egg82.sprc.buffers.BlockDataBuffer;
@@ -10,12 +10,12 @@ import ninja.egg82.patterns.ServiceLocator;
 import ninja.egg82.plugin.handlers.events.MonitorEventHandler;
 import ninja.egg82.utils.ThreadUtil;
 
-public class LogBlockSpreadEvent extends MonitorEventHandler<BlockSpreadEvent> {
+public class LogBlockGrowEvent extends MonitorEventHandler<BlockGrowEvent> {
 	//vars
 	private DoubleBuffer<BlockDataInsertContainer> buffer = ServiceLocator.getService(BlockDataBuffer.class);
 	
 	//constructor
-	public LogBlockSpreadEvent() {
+	public LogBlockGrowEvent() {
 		super();
 	}
 	
@@ -23,7 +23,7 @@ public class LogBlockSpreadEvent extends MonitorEventHandler<BlockSpreadEvent> {
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
-		if (!Config.blockConfig.spread) {
+		if (!Config.blockConfig.grow) {
 			return;
 		}
 		

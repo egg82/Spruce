@@ -23,35 +23,38 @@ sql:
 # Specify what types of data to log
 log:
   player:
-    chat: true
-    command: true
-    login: true
-    logout: true
-    worldChange: true
-  # Entity interactions/data
-  entities: true
+    chat: true # Player chat/talk
+    command: true # Player commands
+    login: true # Player login/join
+    logout: true # Player logout/quit
+    worldChange: true # Player changes worlds
+  entity:
+    death: true # Entity deaths
+    inventoryChange: true # Entity inventory changes
+    spawn: false # Entity spawns, does not track items
+    worldChange: false # Entity world changes
   block:
     # Low frequency/intensity
-    player: true
-    explode: true
-    teleport: true
-    sign: true
-    ignite: true
+    player: true # Block changes from players
+    explode: true # Blocks removed by explosion
+    sign: true # Sign text changes
+    ignite: true # Block being lit on fire
     # Recommended bare-minimum
-    grow: true
-    burn: true
-    inventory: true
-    entity: true
-    piston: true
+    grow: true # Crop growth
+    burn: true # Block burning up in a fire
+    inventory: true # Block inventory changes
+    entity: true # Block changes from entities (not players)
+    piston: true # Piston changes and block movements from pistons
     # High frequency/intensity
-    damage: false
-    dispense: false
-    form: false
-    spread: false
-    cauldron: false
-    decay: false
+    teleport: false # Teleporting blocks or blocks that flow
+    damage: false # Block damage such as anvils, etc
+    dispense: false # Block dispensing an item from its inventory
+    form: false # Snow/Ice melting or forming, cobble/obsidian forming, fire burning out, etc
+    spread: false # Muscrooms, fire, grass spreading, etc
+    cauldron: false # Cauldron water level change
+    decay: false # Leaf decay
     # Plugins
-    worldedit: true
+    worldedit: true # WorldEdit/AsyncWorldEdit/FastAsyncWorldEdit/etc
 
 # Logs/data beyond these values will be automatically removed from the database
 autoPurge:

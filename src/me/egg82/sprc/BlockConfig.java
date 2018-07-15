@@ -4,7 +4,6 @@ public class BlockConfig {
 	//vars
 	public volatile boolean player = false;
 	public volatile boolean explode = false;
-	public volatile boolean teleport = false;
 	public volatile boolean sign = false;
 	public volatile boolean ignite = false;
 	
@@ -14,6 +13,7 @@ public class BlockConfig {
 	public volatile boolean entity = false;
 	public volatile boolean piston = false;
 	
+	public volatile boolean teleport = false;
 	public volatile boolean damage = false;
 	public volatile boolean dispense = false;
 	public volatile boolean form = false;

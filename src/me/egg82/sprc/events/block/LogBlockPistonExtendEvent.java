@@ -1,7 +1,10 @@
-package me.egg82.sprc.events;
+package me.egg82.sprc.events.block;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.bukkit.block.Block;
-import org.bukkit.event.block.BlockPistonRetractEvent;
+import org.bukkit.event.block.BlockPistonExtendEvent;
 
 import me.egg82.sprc.Config;
 import me.egg82.sprc.buffers.BlockDataBuffer;
@@ -11,12 +14,12 @@ import ninja.egg82.patterns.ServiceLocator;
 import ninja.egg82.plugin.handlers.events.MonitorEventHandler;
 import ninja.egg82.utils.ThreadUtil;
 
-public class LogBlockPistonRetractEvent extends MonitorEventHandler<BlockPistonRetractEvent> {
+public class LogBlockPistonExtendEvent extends MonitorEventHandler<BlockPistonExtendEvent> {
 	//vars
 	private DoubleBuffer<BlockDataInsertContainer> buffer = ServiceLocator.getService(BlockDataBuffer.class);
 	
 	//constructor
-	public LogBlockPistonRetractEvent() {
+	public LogBlockPistonExtendEvent() {
 		super();
 	}
 	
@@ -32,24 +35,23 @@ public class LogBlockPistonRetractEvent extends MonitorEventHandler<BlockPistonR
 			return;
 		}
 		
+		List<BlockDataInsertContainer> containers = new ArrayList<BlockDataInsertContainer>();
+		
 		// Create the container beforehand so we don't have stale data
-			BlockDataInsertContainer container = new BlockDataInsertContainer(event.getBlock().getState());
-			ThreadUtil.submit(new Runnable() {
-				public void run() {
-					// getCurrentBuffer has the potential to lock the current thread
-					buffer.getCurrentBuffer().add(container);
-				}
-			});
+		containers.add(new BlockDataInsertContainer(event.getBlock().getState()));
 		
 		for (Block block : event.getBlocks()) {
 			// Create the container beforehand so we don't have stale data
-			BlockDataInsertContainer container2 = new BlockDataInsertContainer(block.getState());
-			ThreadUtil.submit(new Runnable() {
-				public void run() {
-					// getCurrentBuffer has the potential to lock the current thread
-					buffer.getCurrentBuffer().add(container2);
-				}
-			});
+			containers.add(new BlockDataInsertContainer(block.getState()));
 		}
+		
+		ThreadUtil.submit(new Runnable() {
+			public void run() {
+				// getCurrentBuffer has the potential to lock the current thread
+				for (BlockDataInsertContainer container : containers) {
+					buffer.getCurrentBuffer().add(container);
+				}
+			}
+		});
 	}
 }

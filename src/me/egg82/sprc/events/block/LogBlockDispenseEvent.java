@@ -1,6 +1,6 @@
-package me.egg82.sprc.events;
+package me.egg82.sprc.events.block;
 
-import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.BlockDispenseEvent;
 
 import me.egg82.sprc.Config;
 import me.egg82.sprc.buffers.BlockDataBuffer;
@@ -10,12 +10,12 @@ import ninja.egg82.patterns.ServiceLocator;
 import ninja.egg82.plugin.handlers.events.MonitorEventHandler;
 import ninja.egg82.utils.ThreadUtil;
 
-public class LogBlockPlaceEvent extends MonitorEventHandler<BlockPlaceEvent> {
+public class LogBlockDispenseEvent extends MonitorEventHandler<BlockDispenseEvent> {
 	//vars
 	private DoubleBuffer<BlockDataInsertContainer> buffer = ServiceLocator.getService(BlockDataBuffer.class);
 	
 	//constructor
-	public LogBlockPlaceEvent() {
+	public LogBlockDispenseEvent() {
 		super();
 	}
 	
@@ -23,7 +23,7 @@ public class LogBlockPlaceEvent extends MonitorEventHandler<BlockPlaceEvent> {
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
-		if (!Config.blockConfig.player) {
+		if (!Config.blockConfig.dispense) {
 			return;
 		}
 		
@@ -32,7 +32,7 @@ public class LogBlockPlaceEvent extends MonitorEventHandler<BlockPlaceEvent> {
 		}
 		
 		// Create the container beforehand so we don't have stale data
-		BlockDataInsertContainer container = new BlockDataInsertContainer(event.getPlayer().getUniqueId(), event.getBlockReplacedState());
+		BlockDataInsertContainer container = new BlockDataInsertContainer(event.getBlock().getState());
 		ThreadUtil.submit(new Runnable() {
 			public void run() {
 				// getCurrentBuffer has the potential to lock the current thread

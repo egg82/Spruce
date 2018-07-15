@@ -8,6 +8,7 @@ public class Config {
 	
 	public static PlayerConfig playerConfig = new PlayerConfig();
 	public static BlockConfig blockConfig = new BlockConfig();
+	public static EntityConfig entityConfig = new EntityConfig();
 	
 	//constructor
 	public Config() {

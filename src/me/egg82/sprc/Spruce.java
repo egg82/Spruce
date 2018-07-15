@@ -89,7 +89,6 @@ public class Spruce extends BasePlugin {
 		
 		Config.blockConfig.player = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.player", Boolean.class).booleanValue();
 		Config.blockConfig.explode = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.explode", Boolean.class).booleanValue();
-		Config.blockConfig.teleport = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.teleport", Boolean.class).booleanValue();
 		Config.blockConfig.sign = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.sign", Boolean.class).booleanValue();
 		Config.blockConfig.ignite = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.ignite", Boolean.class).booleanValue();
 		Config.blockConfig.grow = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.grow", Boolean.class).booleanValue();
@@ -97,6 +96,7 @@ public class Spruce extends BasePlugin {
 		Config.blockConfig.inventory = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.inventory", Boolean.class).booleanValue();
 		Config.blockConfig.entity = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.entity", Boolean.class).booleanValue();
 		Config.blockConfig.piston = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.piston", Boolean.class).booleanValue();
+		Config.blockConfig.teleport = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.teleport", Boolean.class).booleanValue();
 		Config.blockConfig.damage = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.damage", Boolean.class).booleanValue();
 		Config.blockConfig.dispense = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.dispense", Boolean.class).booleanValue();
 		Config.blockConfig.form = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.form", Boolean.class).booleanValue();
@@ -104,6 +104,8 @@ public class Spruce extends BasePlugin {
 		Config.blockConfig.cauldron = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.cauldron", Boolean.class).booleanValue();
 		Config.blockConfig.decay = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.decay", Boolean.class).booleanValue();
 		Config.blockConfig.worldedit = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.worldedit", Boolean.class).booleanValue();
+		
+		Config.entityConfig.spawn = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.entity.spawn", Boolean.class).booleanValue();
 	}
 	
 	public void onEnable() {

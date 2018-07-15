@@ -1,4 +1,4 @@
-package me.egg82.sprc.events;
+package me.egg82.sprc.events.player;
 
 import org.bukkit.event.player.PlayerJoinEvent;
 
@@ -29,7 +29,7 @@ public class LogPlayerJoinEvent extends MonitorEventHandler<PlayerJoinEvent> {
 		}
 		
 		// Create the container beforehand so we don't have stale data
-		PlayerDataInsertContainer container = new PlayerDataInsertContainer(event.getPlayer().getUniqueId(), event.getPlayer().getLocation(), PlayerDataType.LOGIN);
+		PlayerDataInsertContainer container = new PlayerDataInsertContainer(event.getPlayer().getUniqueId(), event.getPlayer().getLocation().clone(), PlayerDataType.LOGIN);
 		ThreadUtil.submit(new Runnable() {
 			public void run() {
 				// getCurrentBuffer has the potential to lock the current thread

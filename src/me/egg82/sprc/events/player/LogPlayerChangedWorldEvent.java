@@ -1,6 +1,6 @@
-package me.egg82.sprc.events;
+package me.egg82.sprc.events.player;
 
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 
 import me.egg82.sprc.Config;
 import me.egg82.sprc.buffers.PlayerDataBuffer;
@@ -11,12 +11,12 @@ import ninja.egg82.patterns.ServiceLocator;
 import ninja.egg82.plugin.handlers.events.MonitorEventHandler;
 import ninja.egg82.utils.ThreadUtil;
 
-public class LogPlayerQuitEvent extends MonitorEventHandler<PlayerQuitEvent> {
+public class LogPlayerChangedWorldEvent extends MonitorEventHandler<PlayerChangedWorldEvent> {
 	//vars
 	private DoubleBuffer<PlayerDataInsertContainer> buffer = ServiceLocator.getService(PlayerDataBuffer.class);
 	
 	//constructor
-	public LogPlayerQuitEvent() {
+	public LogPlayerChangedWorldEvent() {
 		super();
 	}
 	
@@ -24,12 +24,12 @@ public class LogPlayerQuitEvent extends MonitorEventHandler<PlayerQuitEvent> {
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
-		if (!Config.playerConfig.logout) {
+		if (!Config.playerConfig.worldChange) {
 			return;
 		}
 		
 		// Create the container beforehand so we don't have stale data
-		PlayerDataInsertContainer container = new PlayerDataInsertContainer(event.getPlayer().getUniqueId(), event.getPlayer().getLocation(), PlayerDataType.LOGIN);
+		PlayerDataInsertContainer container = new PlayerDataInsertContainer(event.getPlayer().getUniqueId(), event.getPlayer().getLocation().clone(), PlayerDataType.WORLD_CHANGE);
 		ThreadUtil.submit(new Runnable() {
 			public void run() {
 				// getCurrentBuffer has the potential to lock the current thread

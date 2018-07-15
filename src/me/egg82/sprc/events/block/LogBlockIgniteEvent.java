@@ -1,6 +1,8 @@
-package me.egg82.sprc.events;
+package me.egg82.sprc.events.block;
 
-import org.bukkit.event.block.BlockGrowEvent;
+import java.util.UUID;
+
+import org.bukkit.event.block.BlockIgniteEvent;
 
 import me.egg82.sprc.Config;
 import me.egg82.sprc.buffers.BlockDataBuffer;
@@ -10,12 +12,12 @@ import ninja.egg82.patterns.ServiceLocator;
 import ninja.egg82.plugin.handlers.events.MonitorEventHandler;
 import ninja.egg82.utils.ThreadUtil;
 
-public class LogBlockGrowEvent extends MonitorEventHandler<BlockGrowEvent> {
+public class LogBlockIgniteEvent extends MonitorEventHandler<BlockIgniteEvent> {
 	//vars
 	private DoubleBuffer<BlockDataInsertContainer> buffer = ServiceLocator.getService(BlockDataBuffer.class);
 	
 	//constructor
-	public LogBlockGrowEvent() {
+	public LogBlockIgniteEvent() {
 		super();
 	}
 	
@@ -23,7 +25,7 @@ public class LogBlockGrowEvent extends MonitorEventHandler<BlockGrowEvent> {
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
-		if (!Config.blockConfig.grow) {
+		if (!Config.blockConfig.ignite) {
 			return;
 		}
 		
@@ -32,7 +34,7 @@ public class LogBlockGrowEvent extends MonitorEventHandler<BlockGrowEvent> {
 		}
 		
 		// Create the container beforehand so we don't have stale data
-		BlockDataInsertContainer container = new BlockDataInsertContainer(event.getBlock().getState());
+		BlockDataInsertContainer container = new BlockDataInsertContainer((event.getPlayer() != null) ? event.getPlayer().getUniqueId() : new UUID(0L, 0L), event.getBlock().getState());
 		ThreadUtil.submit(new Runnable() {
 			public void run() {
 				// getCurrentBuffer has the potential to lock the current thread

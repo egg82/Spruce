@@ -110,7 +110,6 @@ public class CreateTablesMySQLCommand extends Command {
 			finalQuery = sql.query(
 				"CREATE TABLE `" + "spruce_" + Config.prefix + "entity_data" + "` (" // Can't use prepared statements with things like "CREATE TABLE"
 						+ "`id` BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,"
-						+ "`uuid` VARCHAR(36) NOT NULL," // Entity UUID, in case it never actually despawned
 						+ "`actorUuid` VARCHAR(36) NOT NULL," // UUID of acting player, or zeroes if system/Bukkit/plugin
 						+ "`type` VARCHAR(25) NOT NULL,"
 						+ "`world` VARCHAR(55) NOT NULL,"
@@ -121,7 +120,7 @@ public class CreateTablesMySQLCommand extends Command {
 						+ "`isDeath` BOOLEAN NOT NULL,"
 						+ "`isWorldChange` BOOLEAN NOT NULL,"
 						// isSpawn, isDeath, and isWorldChange can all be false if the only difference is an inv change
-						+ "`inventory` BLOB," // Not MEDIUMBLOB or LONGBLOB because 64k of data should be more than enough, especially compressed
+						+ "`compressedData` BLOB," // Not MEDIUMBLOB or LONGBLOB because 64k of data should be more than enough, especially compressed
 						+ "`time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
 						+ "`rolledBack` BOOLEAN NOT NULL DEFAULT 0"
 				+ ");"

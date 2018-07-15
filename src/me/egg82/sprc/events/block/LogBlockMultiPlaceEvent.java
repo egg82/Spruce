@@ -1,4 +1,7 @@
-package me.egg82.sprc.events;
+package me.egg82.sprc.events.block;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.bukkit.block.BlockState;
 import org.bukkit.event.block.BlockMultiPlaceEvent;
@@ -32,15 +35,20 @@ public class LogBlockMultiPlaceEvent extends MonitorEventHandler<BlockMultiPlace
 			return;
 		}
 		
+		List<BlockDataInsertContainer> containers = new ArrayList<BlockDataInsertContainer>();
+		
 		for (BlockState state : event.getReplacedBlockStates()) {
 			// Create the container beforehand so we don't have stale data
-			BlockDataInsertContainer container = new BlockDataInsertContainer(event.getPlayer().getUniqueId(), state);
-			ThreadUtil.submit(new Runnable() {
-				public void run() {
-					// getCurrentBuffer has the potential to lock the current thread
+			containers.add(new BlockDataInsertContainer(event.getPlayer().getUniqueId(), state));
+		}
+		
+		ThreadUtil.submit(new Runnable() {
+			public void run() {
+				// getCurrentBuffer has the potential to lock the current thread
+				for (BlockDataInsertContainer container : containers) {
 					buffer.getCurrentBuffer().add(container);
 				}
-			});
-		}
+			}
+		});
 	}
 }

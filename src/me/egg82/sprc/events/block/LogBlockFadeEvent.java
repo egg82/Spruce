@@ -1,21 +1,21 @@
-package me.egg82.sprc.events;
+package me.egg82.sprc.events.block;
 
-import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.block.BlockFadeEvent;
 
 import me.egg82.sprc.Config;
-import me.egg82.sprc.buffers.PlayerChatBuffer;
-import me.egg82.sprc.core.PlayerChatInsertContainer;
+import me.egg82.sprc.buffers.BlockDataBuffer;
+import me.egg82.sprc.core.BlockDataInsertContainer;
 import ninja.egg82.patterns.DoubleBuffer;
 import ninja.egg82.patterns.ServiceLocator;
 import ninja.egg82.plugin.handlers.events.MonitorEventHandler;
 import ninja.egg82.utils.ThreadUtil;
 
-public class LogPlayerChatEvent extends MonitorEventHandler<AsyncPlayerChatEvent> {
+public class LogBlockFadeEvent extends MonitorEventHandler<BlockFadeEvent> {
 	//vars
-	private DoubleBuffer<PlayerChatInsertContainer> buffer = ServiceLocator.getService(PlayerChatBuffer.class);
+	private DoubleBuffer<BlockDataInsertContainer> buffer = ServiceLocator.getService(BlockDataBuffer.class);
 	
 	//constructor
-	public LogPlayerChatEvent() {
+	public LogBlockFadeEvent() {
 		super();
 	}
 	
@@ -23,7 +23,7 @@ public class LogPlayerChatEvent extends MonitorEventHandler<AsyncPlayerChatEvent
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
-		if (!Config.playerConfig.chat) {
+		if (!Config.blockConfig.form) {
 			return;
 		}
 		
@@ -32,7 +32,7 @@ public class LogPlayerChatEvent extends MonitorEventHandler<AsyncPlayerChatEvent
 		}
 		
 		// Create the container beforehand so we don't have stale data
-		PlayerChatInsertContainer container = new PlayerChatInsertContainer(event.getPlayer().getUniqueId(), event.getMessage());
+		BlockDataInsertContainer container = new BlockDataInsertContainer(event.getBlock().getState());
 		ThreadUtil.submit(new Runnable() {
 			public void run() {
 				// getCurrentBuffer has the potential to lock the current thread

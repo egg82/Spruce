@@ -1,6 +1,10 @@
-package me.egg82.sprc.events;
+package me.egg82.sprc.events.block;
 
-import org.bukkit.event.block.BlockDamageEvent;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.bukkit.block.Block;
+import org.bukkit.event.block.BlockExplodeEvent;
 
 import me.egg82.sprc.Config;
 import me.egg82.sprc.buffers.BlockDataBuffer;
@@ -10,12 +14,12 @@ import ninja.egg82.patterns.ServiceLocator;
 import ninja.egg82.plugin.handlers.events.MonitorEventHandler;
 import ninja.egg82.utils.ThreadUtil;
 
-public class LogBlockDamageEvent extends MonitorEventHandler<BlockDamageEvent> {
+public class LogBlockExplodeEvent extends MonitorEventHandler<BlockExplodeEvent> {
 	//vars
 	private DoubleBuffer<BlockDataInsertContainer> buffer = ServiceLocator.getService(BlockDataBuffer.class);
 	
 	//constructor
-	public LogBlockDamageEvent() {
+	public LogBlockExplodeEvent() {
 		super();
 	}
 	
@@ -23,7 +27,7 @@ public class LogBlockDamageEvent extends MonitorEventHandler<BlockDamageEvent> {
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
-		if (!Config.blockConfig.damage) {
+		if (!Config.blockConfig.explode) {
 			return;
 		}
 		
@@ -31,12 +35,22 @@ public class LogBlockDamageEvent extends MonitorEventHandler<BlockDamageEvent> {
 			return;
 		}
 		
+		List<BlockDataInsertContainer> containers = new ArrayList<BlockDataInsertContainer>();
+		
 		// Create the container beforehand so we don't have stale data
-		BlockDataInsertContainer container = new BlockDataInsertContainer(event.getBlock().getState());
+		containers.add(new BlockDataInsertContainer(event.getBlock().getState()));
+		
+		for (Block block : event.blockList()) {
+			// Create the container beforehand so we don't have stale data
+			containers.add(new BlockDataInsertContainer(block.getState()));
+		}
+		
 		ThreadUtil.submit(new Runnable() {
 			public void run() {
 				// getCurrentBuffer has the potential to lock the current thread
-				buffer.getCurrentBuffer().add(container);
+				for (BlockDataInsertContainer container : containers) {
+					buffer.getCurrentBuffer().add(container);
+				}
 			}
 		});
 	}

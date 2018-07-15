@@ -1,9 +1,9 @@
-package me.egg82.sprc.events;
+package me.egg82.sprc.events.block;
 
 import java.util.UUID;
 
 import org.bukkit.entity.Player;
-import org.bukkit.event.block.CauldronLevelChangeEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 
 import me.egg82.sprc.Config;
 import me.egg82.sprc.buffers.BlockDataBuffer;
@@ -13,12 +13,12 @@ import ninja.egg82.patterns.ServiceLocator;
 import ninja.egg82.plugin.handlers.events.MonitorEventHandler;
 import ninja.egg82.utils.ThreadUtil;
 
-public class LogCauldronLevelChangeEvent extends MonitorEventHandler<CauldronLevelChangeEvent> {
+public class LogEntityChangeBlockEvent extends MonitorEventHandler<EntityChangeBlockEvent> {
 	//vars
 	private DoubleBuffer<BlockDataInsertContainer> buffer = ServiceLocator.getService(BlockDataBuffer.class);
 	
 	//constructor
-	public LogCauldronLevelChangeEvent() {
+	public LogEntityChangeBlockEvent() {
 		super();
 	}
 	
@@ -26,7 +26,7 @@ public class LogCauldronLevelChangeEvent extends MonitorEventHandler<CauldronLev
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
-		if (!Config.blockConfig.cauldron) {
+		if (!Config.blockConfig.entity) {
 			return;
 		}
 		
@@ -35,7 +35,7 @@ public class LogCauldronLevelChangeEvent extends MonitorEventHandler<CauldronLev
 		}
 		
 		// Create the container beforehand so we don't have stale data
-		BlockDataInsertContainer container = new BlockDataInsertContainer((event.getEntity() != null && event.getEntity() instanceof Player) ? event.getEntity().getUniqueId() : new UUID(0L, 0L), event.getBlock().getState());
+		BlockDataInsertContainer container = new BlockDataInsertContainer((event.getEntity() instanceof Player) ? event.getEntity().getUniqueId() : new UUID(0L, 0L), event.getBlock().getState());
 		ThreadUtil.submit(new Runnable() {
 			public void run() {
 				// getCurrentBuffer has the potential to lock the current thread

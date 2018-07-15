@@ -1,4 +1,4 @@
-package me.egg82.sprc.events;
+package me.egg82.sprc.events.block;
 
 import org.bukkit.block.BlockState;
 import org.bukkit.block.DoubleChest;

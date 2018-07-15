@@ -1,6 +1,6 @@
-package me.egg82.sprc.events;
+package me.egg82.sprc.events.block;
 
-import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.LeavesDecayEvent;
 
 import me.egg82.sprc.Config;
 import me.egg82.sprc.buffers.BlockDataBuffer;
@@ -10,12 +10,12 @@ import ninja.egg82.patterns.ServiceLocator;
 import ninja.egg82.plugin.handlers.events.MonitorEventHandler;
 import ninja.egg82.utils.ThreadUtil;
 
-public class LogBlockExplodeEvent extends MonitorEventHandler<BlockExplodeEvent> {
+public class LogLeavesDecayEvent extends MonitorEventHandler<LeavesDecayEvent> {
 	//vars
 	private DoubleBuffer<BlockDataInsertContainer> buffer = ServiceLocator.getService(BlockDataBuffer.class);
 	
 	//constructor
-	public LogBlockExplodeEvent() {
+	public LogLeavesDecayEvent() {
 		super();
 	}
 	
@@ -23,7 +23,7 @@ public class LogBlockExplodeEvent extends MonitorEventHandler<BlockExplodeEvent>
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
-		if (!Config.blockConfig.explode) {
+		if (!Config.blockConfig.decay) {
 			return;
 		}
 		
