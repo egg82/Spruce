@@ -32,21 +32,21 @@ log:
   entities: true
   block:
     # Low frequency/intensity
-    break: true
-    place: true
+    player: true
     explode: true
-    fromTo: true
+    teleport: true
+    sign: true
+    ignite: true
     # Recommended bare-minimum
     grow: true
-    ignite: true
     burn: true
     inventory: true
     entity: true
+    piston: true
     # High frequency/intensity
     damage: false
     dispense: false
-    fadeForm: false
-    piston: false
+    form: false
     spread: false
     cauldron: false
     decay: false

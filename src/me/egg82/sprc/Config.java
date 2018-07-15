@@ -6,6 +6,9 @@ public class Config {
 	public static volatile long purgePlayer = -1L;
 	public static volatile long purgeWorld = -1L;
 	
+	public static PlayerConfig playerConfig = new PlayerConfig();
+	public static BlockConfig blockConfig = new BlockConfig();
+	
 	//constructor
 	public Config() {
 		

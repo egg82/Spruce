@@ -3,14 +3,15 @@ package me.egg82.sprc.events;
 import org.bukkit.block.BlockState;
 import org.bukkit.event.block.BlockMultiPlaceEvent;
 
+import me.egg82.sprc.Config;
 import me.egg82.sprc.buffers.BlockDataBuffer;
 import me.egg82.sprc.core.BlockDataInsertContainer;
 import ninja.egg82.patterns.DoubleBuffer;
 import ninja.egg82.patterns.ServiceLocator;
-import ninja.egg82.plugin.handlers.events.HighEventHandler;
+import ninja.egg82.plugin.handlers.events.MonitorEventHandler;
 import ninja.egg82.utils.ThreadUtil;
 
-public class LogBlockMultiPlaceEvent extends HighEventHandler<BlockMultiPlaceEvent> {
+public class LogBlockMultiPlaceEvent extends MonitorEventHandler<BlockMultiPlaceEvent> {
 	//vars
 	private DoubleBuffer<BlockDataInsertContainer> buffer = ServiceLocator.getService(BlockDataBuffer.class);
 	
@@ -23,6 +24,10 @@ public class LogBlockMultiPlaceEvent extends HighEventHandler<BlockMultiPlaceEve
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
+		if (!Config.blockConfig.player) {
+			return;
+		}
+		
 		if (event.isCancelled()) {
 			return;
 		}

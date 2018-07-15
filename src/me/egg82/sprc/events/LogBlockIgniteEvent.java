@@ -4,14 +4,15 @@ import java.util.UUID;
 
 import org.bukkit.event.block.BlockIgniteEvent;
 
+import me.egg82.sprc.Config;
 import me.egg82.sprc.buffers.BlockDataBuffer;
 import me.egg82.sprc.core.BlockDataInsertContainer;
 import ninja.egg82.patterns.DoubleBuffer;
 import ninja.egg82.patterns.ServiceLocator;
-import ninja.egg82.plugin.handlers.events.HighEventHandler;
+import ninja.egg82.plugin.handlers.events.MonitorEventHandler;
 import ninja.egg82.utils.ThreadUtil;
 
-public class LogBlockIgniteEvent extends HighEventHandler<BlockIgniteEvent> {
+public class LogBlockIgniteEvent extends MonitorEventHandler<BlockIgniteEvent> {
 	//vars
 	private DoubleBuffer<BlockDataInsertContainer> buffer = ServiceLocator.getService(BlockDataBuffer.class);
 	
@@ -24,6 +25,10 @@ public class LogBlockIgniteEvent extends HighEventHandler<BlockIgniteEvent> {
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
+		if (!Config.blockConfig.ignite) {
+			return;
+		}
+		
 		if (event.isCancelled()) {
 			return;
 		}

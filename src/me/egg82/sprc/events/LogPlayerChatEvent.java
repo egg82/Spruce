@@ -2,14 +2,15 @@ package me.egg82.sprc.events;
 
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
+import me.egg82.sprc.Config;
 import me.egg82.sprc.buffers.PlayerChatBuffer;
 import me.egg82.sprc.core.PlayerChatInsertContainer;
 import ninja.egg82.patterns.DoubleBuffer;
 import ninja.egg82.patterns.ServiceLocator;
-import ninja.egg82.plugin.handlers.events.HighEventHandler;
+import ninja.egg82.plugin.handlers.events.MonitorEventHandler;
 import ninja.egg82.utils.ThreadUtil;
 
-public class LogPlayerChatEvent extends HighEventHandler<AsyncPlayerChatEvent> {
+public class LogPlayerChatEvent extends MonitorEventHandler<AsyncPlayerChatEvent> {
 	//vars
 	private DoubleBuffer<PlayerChatInsertContainer> buffer = ServiceLocator.getService(PlayerChatBuffer.class);
 	
@@ -22,6 +23,10 @@ public class LogPlayerChatEvent extends HighEventHandler<AsyncPlayerChatEvent> {
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
+		if (!Config.playerConfig.chat) {
+			return;
+		}
+		
 		if (event.isCancelled()) {
 			return;
 		}

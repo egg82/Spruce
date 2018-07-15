@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.BiConsumer;
+import java.util.zip.Deflater;
 
 import org.bukkit.Location;
 
@@ -95,7 +96,7 @@ public class InsertBlockDataSQLiteCommand extends Command {
 			retVal.add(Integer.valueOf(location.getBlockX()));
 			retVal.add(Integer.valueOf(location.getBlockY()));
 			retVal.add(Integer.valueOf(location.getBlockZ()));
-			retVal.add(serializationHelper.toCompressedBytes(d.getBlockState()));
+			retVal.add(serializationHelper.toCompressedBytes(d.getBlockState(), d.getInventory(), Deflater.BEST_COMPRESSION));
 		}
 		
 		return retVal.toArray();

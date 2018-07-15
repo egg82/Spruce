@@ -5,14 +5,15 @@ import java.util.UUID;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.CauldronLevelChangeEvent;
 
+import me.egg82.sprc.Config;
 import me.egg82.sprc.buffers.BlockDataBuffer;
 import me.egg82.sprc.core.BlockDataInsertContainer;
 import ninja.egg82.patterns.DoubleBuffer;
 import ninja.egg82.patterns.ServiceLocator;
-import ninja.egg82.plugin.handlers.events.HighEventHandler;
+import ninja.egg82.plugin.handlers.events.MonitorEventHandler;
 import ninja.egg82.utils.ThreadUtil;
 
-public class LogCauldronLevelChangeEvent extends HighEventHandler<CauldronLevelChangeEvent> {
+public class LogCauldronLevelChangeEvent extends MonitorEventHandler<CauldronLevelChangeEvent> {
 	//vars
 	private DoubleBuffer<BlockDataInsertContainer> buffer = ServiceLocator.getService(BlockDataBuffer.class);
 	
@@ -25,6 +26,10 @@ public class LogCauldronLevelChangeEvent extends HighEventHandler<CauldronLevelC
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
+		if (!Config.blockConfig.cauldron) {
+			return;
+		}
+		
 		if (event.isCancelled()) {
 			return;
 		}

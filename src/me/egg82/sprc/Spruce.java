@@ -80,6 +80,30 @@ public class Spruce extends BasePlugin {
 		Config.prefix = ServiceLocator.getService(ConfigRegistry.class).getRegister("sql.prefix", String.class);
 		Config.purgePlayer = TimeUtil.getTime(ServiceLocator.getService(ConfigRegistry.class).getRegister("autoPurge.player", String.class));
 		Config.purgeWorld = TimeUtil.getTime(ServiceLocator.getService(ConfigRegistry.class).getRegister("autoPurge.world", String.class));
+		
+		Config.playerConfig.chat = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.player.chat", Boolean.class).booleanValue();
+		Config.playerConfig.command = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.player.command", Boolean.class).booleanValue();
+		Config.playerConfig.login = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.player.login", Boolean.class).booleanValue();
+		Config.playerConfig.logout = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.player.logout", Boolean.class).booleanValue();
+		Config.playerConfig.worldChange = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.player.worldChange", Boolean.class).booleanValue();
+		
+		Config.blockConfig.player = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.player", Boolean.class).booleanValue();
+		Config.blockConfig.explode = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.explode", Boolean.class).booleanValue();
+		Config.blockConfig.teleport = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.teleport", Boolean.class).booleanValue();
+		Config.blockConfig.sign = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.sign", Boolean.class).booleanValue();
+		Config.blockConfig.ignite = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.ignite", Boolean.class).booleanValue();
+		Config.blockConfig.grow = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.grow", Boolean.class).booleanValue();
+		Config.blockConfig.burn = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.burn", Boolean.class).booleanValue();
+		Config.blockConfig.inventory = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.inventory", Boolean.class).booleanValue();
+		Config.blockConfig.entity = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.entity", Boolean.class).booleanValue();
+		Config.blockConfig.piston = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.piston", Boolean.class).booleanValue();
+		Config.blockConfig.damage = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.damage", Boolean.class).booleanValue();
+		Config.blockConfig.dispense = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.dispense", Boolean.class).booleanValue();
+		Config.blockConfig.form = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.form", Boolean.class).booleanValue();
+		Config.blockConfig.spread = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.spread", Boolean.class).booleanValue();
+		Config.blockConfig.cauldron = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.cauldron", Boolean.class).booleanValue();
+		Config.blockConfig.decay = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.decay", Boolean.class).booleanValue();
+		Config.blockConfig.worldedit = ServiceLocator.getService(ConfigRegistry.class).getRegister("log.block.worldedit", Boolean.class).booleanValue();
 	}
 	
 	public void onEnable() {
@@ -104,7 +128,7 @@ public class Spruce extends BasePlugin {
 		
 		ThreadUtil.rename(getName());
 		ThreadUtil.schedule(checkExceptionLimitReached, 60L * 60L * 1000L);
-		ThreadUtil.schedule(onFlushDataThread, 3L * 1000L); // The longer we wait, the more "off" actual insert times become
+		ThreadUtil.schedule(onFlushDataThread, 1L * 1000L); // The longer we wait, the more "off" actual insert times become
 		ThreadUtil.schedule(onPurgeDataThread, 60L * 1000L);
 	}
 	public void onDisable() {
@@ -169,7 +193,7 @@ public class Spruce extends BasePlugin {
 			flushPlayerData();
 			flushBlockData();
 			
-			ThreadUtil.schedule(onFlushDataThread, 3L * 1000L);
+			ThreadUtil.schedule(onFlushDataThread, 1L * 1000L);
 		}
 	};
 	private Runnable checkExceptionLimitReached = new Runnable() {

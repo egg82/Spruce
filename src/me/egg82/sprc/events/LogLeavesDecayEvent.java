@@ -2,14 +2,15 @@ package me.egg82.sprc.events;
 
 import org.bukkit.event.block.LeavesDecayEvent;
 
+import me.egg82.sprc.Config;
 import me.egg82.sprc.buffers.BlockDataBuffer;
 import me.egg82.sprc.core.BlockDataInsertContainer;
 import ninja.egg82.patterns.DoubleBuffer;
 import ninja.egg82.patterns.ServiceLocator;
-import ninja.egg82.plugin.handlers.events.HighEventHandler;
+import ninja.egg82.plugin.handlers.events.MonitorEventHandler;
 import ninja.egg82.utils.ThreadUtil;
 
-public class LogLeavesDecayEvent extends HighEventHandler<LeavesDecayEvent> {
+public class LogLeavesDecayEvent extends MonitorEventHandler<LeavesDecayEvent> {
 	//vars
 	private DoubleBuffer<BlockDataInsertContainer> buffer = ServiceLocator.getService(BlockDataBuffer.class);
 	
@@ -22,6 +23,10 @@ public class LogLeavesDecayEvent extends HighEventHandler<LeavesDecayEvent> {
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
+		if (!Config.blockConfig.decay) {
+			return;
+		}
+		
 		if (event.isCancelled()) {
 			return;
 		}

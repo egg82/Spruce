@@ -2,14 +2,15 @@ package me.egg82.sprc.events;
 
 import org.bukkit.event.block.BlockExplodeEvent;
 
+import me.egg82.sprc.Config;
 import me.egg82.sprc.buffers.BlockDataBuffer;
 import me.egg82.sprc.core.BlockDataInsertContainer;
 import ninja.egg82.patterns.DoubleBuffer;
 import ninja.egg82.patterns.ServiceLocator;
-import ninja.egg82.plugin.handlers.events.HighEventHandler;
+import ninja.egg82.plugin.handlers.events.MonitorEventHandler;
 import ninja.egg82.utils.ThreadUtil;
 
-public class LogBlockExplodeEvent extends HighEventHandler<BlockExplodeEvent> {
+public class LogBlockExplodeEvent extends MonitorEventHandler<BlockExplodeEvent> {
 	//vars
 	private DoubleBuffer<BlockDataInsertContainer> buffer = ServiceLocator.getService(BlockDataBuffer.class);
 	
@@ -22,6 +23,10 @@ public class LogBlockExplodeEvent extends HighEventHandler<BlockExplodeEvent> {
 	
 	//private
 	protected void onExecute(long elapsedMilliseconds) {
+		if (!Config.blockConfig.explode) {
+			return;
+		}
+		
 		if (event.isCancelled()) {
 			return;
 		}
